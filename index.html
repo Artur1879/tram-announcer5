@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Речевой механизатор МСЧРА-02</title>
+    <style>
+        * {
+            user-select: none;
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: #1a1a1a;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Courier New', 'Terminal', 'Monaco', monospace;
+            padding: 20px;
+        }
+
+        .informator {
+            max-width: 720px;
+            width: 100%;
+            background: #2b2b2b;
+            background-image: linear-gradient(145deg, #3d3d3d 0%, #232323 100%);
+            border-radius: 28px 28px 24px 24px;
+            padding: 22px 20px 28px 20px;
+            box-shadow: 0 20px 35px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.15);
+            border: 1px solid #5a5a5a;
+            position: relative;
+        }
+
+        .device-header {
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            right: 20px;
+            background: #1f1f1f;
+            border-radius: 40px;
+            padding: 4px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            border: 1px solid #6a6a6a;
+            box-shadow: inset 0 1px 0 #5a5a5a, 0 2px 4px black;
+        }
+
+        .device-model {
+            font-size: 14px;
+            font-weight: bold;
+            color: #c9c9c9;
+            letter-spacing: 2px;
+            font-family: monospace;
+        }
+
+        .device-name {
+            font-size: 13px;
+            color: #8f8f6f;
+            letter-spacing: 1px;
+        }
+
+        .display-panel {
+            background: #0f120c;
+            border-radius: 20px;
+            padding: 18px;
+            margin-top: 28px;
+            margin-bottom: 25px;
+            box-shadow: inset 0 0 20px #000000aa, 0 6px 10px rgba(0,0,0,0.5);
+            border: 1px solid #5e5e4a;
+        }
+
+        .route-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #4f7a3a;
+            padding-bottom: 12px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .route-number {
+            font-size: 56px;
+            font-weight: bold;
+            background: #000000cc;
+            padding: 0px 20px;
+            border-radius: 16px;
+            letter-spacing: 6px;
+            font-family: 'Courier New', monospace;
+            color: #d4ffb0;
+            text-shadow: 0 0 6px #6eff3a;
+        }
+
+        .direction {
+            font-size: 20px;
+            background: #000000aa;
+            padding: 6px 18px;
+            border-radius: 18px;
+            font-weight: bold;
+            color: #e6ffcc;
+        }
+
+        .datetime {
+            display: flex;
+            justify-content: space-between;
+            font-size: 18px;
+            background: #030603;
+            padding: 8px 16px;
+            border-radius: 14px;
+            margin-top: 12px;
+            font-weight: bold;
+            font-family: monospace;
+            color: #9eff80;
+            border: 1px solid #3f7230;
+        }
+
+        .current-stop {
+            font-size: 34px;
+            font-weight: bold;
+            text-align: center;
+            background: #010501cc;
+            margin-top: 18px;
+            padding: 22px 10px;
+            border-radius: 20px;
+            word-break: break-word;
+            color: #ffefb0;
+            text-shadow: 0 0 5px #ffcc44;
+            font-family: monospace;
+            letter-spacing: 2px;
+            border: 1px solid #6a874a;
+        }
+
+        .buttons-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .announce-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            background: #2e2e2e;
+            border: none;
+            color: #ececc0;
+            font-size: 17px;
+            font-weight: bold;
+            padding: 14px 6px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: 0.03s linear;
+            box-shadow: 0 4px 0 #121212;
+            font-family: 'Courier New', monospace;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            border-bottom: 1px solid #6f6f5a;
+        }
+
+        button:active {
+            transform: translateY(2px);
+            box-shadow: 0 1px 0 #121212;
+        }
+
+        .btn-power-on { background: #2f6b2f; color: #eaffcf; border-bottom-color: #9fdf6f; }
+        .btn-power-off { background: #6b2f2f; border-bottom-color: #b55a3a; }
+        .btn-route { background: #3a5e6b; }
+        .btn-dir { background: #b87c2e; color: #ffefcf; }
+        .btn-stop { background: #8b3a1a; }
+        .btn-announce-next { background: #3f6b3f; }
+        .btn-announce-stop { background: #3a6b5e; }
+        .nav-btn { background: #4d4a3e; font-size: 26px; padding: 10px; }
+
+        .stop-nav {
+            display: flex;
+            gap: 15px;
+            margin-top: 12px;
+        }
+        .stop-nav button {
+            flex: 1;
+            font-size: 26px;
+        }
+
+        .label-text {
+            font-size: 10px;
+            color: #8f8f7a;
+            text-align: center;
+            margin-top: 14px;
+            font-family: monospace;
+        }
+
+        .section-caption {
+            text-align: center;
+            margin: 8px 0 10px 0;
+            font-size: 11px;
+            color: #bcbc8a;
+            background: #1f1f1a;
+            display: inline-block;
+            width: auto;
+            padding: 3px 18px;
+            border-radius: 40px;
+            letter-spacing: 2px;
+        }
+        .caption-center {
+            text-align: center;
+        }
+
+        @media (max-width: 550px) {
+            .route-number { font-size: 38px; letter-spacing: 3px; }
+            .direction { font-size: 14px; }
+            .current-stop { font-size: 22px; }
+            button { font-size: 11px; padding: 10px 0; }
+            .nav-btn { font-size: 20px; }
+        }
+    </style>
+</head>
+<body>
+<div class="informator">
+    <div class="device-header">
+        <span class="device-model">⚙️ МСЧРА-02 ⚙️</span>
+        <span class="device-name">РЕЧЕВОЙ МЕХАНИЗАТОР</span>
+    </div>
+
+    <div class="display-panel">
+        <div class="route-info">
+            <span class="route-number" id="routeNumber">---</span>
+            <span class="direction" id="directionText">ВЫКЛ</span>
+        </div>
+        <div class="datetime">
+            <span id="dateText">--.--.--</span>
+            <span id="timeText">--:--:--</span>
+        </div>
+        <div class="current-stop" id="currentStopDisplay">ОСТАНОВКА</div>
+    </div>
+
+    <div class="buttons-row">
+        <button id="btnOn" class="btn-power-on">🔴 ВКЛ</button>
+        <button id="btnOff" class="btn-power-off">⚫ ВЫКЛ</button>
+        <button id="btnSelectRoute" class="btn-route">🔄 МАРШРУТ</button>
+        <button id="btnDirection" class="btn-dir">↔️ НАПРАВЛЕНИЕ</button>
+        <button id="btnStopAnnounce" class="btn-stop">⏹️ СТОП ОБЪЯВЛ.</button>
+    </div>
+
+    <div class="caption-center">
+        <span class="section-caption">🎙️ РЕЧЕВОЙ БЛОК</span>
+    </div>
+    <div class="announce-row">
+        <!-- ПОМЕНЯЛ МЕСТАМИ: слева СЛЕДУЮЩАЯ, справа ОСТАНОВКА -->
+        <button id="btnAnnounceNext" class="btn-announce-next">📢 СЛЕДУЮЩАЯ ОСТАНОВКА</button>
+        <button id="btnAnnounceStopName" class="btn-announce-stop">📍 ОСТАНОВКА + НАЗВ.</button>
+    </div>
+
+    <div class="stop-nav">
+        <button id="prevStop" class="nav-btn">◀ ПРЕД.</button>
+        <button id="nextStop" class="nav-btn">СЛЕД. ▶</button>
+    </div>
+    <div class="label-text">▼ ПЕРЕКЛЮЧЕНИЕ ОСТАНОВОК (РУЧНОЕ) ▼</div>
+</div>
+
+<script>
+    const routesData = {
+        1: { name: "Автовокзал → Микрорайон", stops: ["Автовокзал", "Площадь Победы", "Университет", "Городская больница", "Микрорайон"] },
+        3: { name: "Ж/Д Вокзал → Центральный рынок → Парк", stops: ["Ж/Д Вокзал", "Центральный рынок", "ДК Нефтяник", "Школа №5", "Парк"] },
+        7: { name: "Аэропорт → Северная", stops: ["Аэропорт", "ТЦ Мега", "Мостовая", "Почта", "Северная"] }
+    };
+
+    let isPowerOn = false;
+    let currentRouteId = 1;
+    let currentStopIndex = 0;
+    let currentDirectionForward = true;
+
+    const routeNumberSpan = document.getElementById("routeNumber");
+    const directionSpan = document.getElementById("directionText");
+    const currentStopSpan = document.getElementById("currentStopDisplay");
+    const dateSpan = document.getElementById("dateText");
+    const timeSpan = document.getElementById("timeText");
+
+    const btnOn = document.getElementById("btnOn");
+    const btnOff = document.getElementById("btnOff");
+    const btnRoute = document.getElementById("btnSelectRoute");
+    const btnDir = document.getElementById("btnDirection");
+    const btnStopAnnounce = document.getElementById("btnStopAnnounce");
+    const btnAnnounceStopName = document.getElementById("btnAnnounceStopName");
+    const btnAnnounceNext = document.getElementById("btnAnnounceNext");
+    const btnPrev = document.getElementById("prevStop");
+    const btnNext = document.getElementById("nextStop");
+
+    function updateDateTime() {
+        const now = new Date();
+        dateSpan.innerText = `${String(now.getDate()).padStart(2,'0')}.${String(now.getMonth()+1).padStart(2,'0')}.${now.getFullYear()}`;
+        timeSpan.innerText = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+    }
+
+    function getCurrentStopList() {
+        const original = routesData[currentRouteId].stops;
+        return currentDirectionForward ? [...original] : [...original].reverse();
+    }
+
+    function getCurrentStopName() {
+        const stops = getCurrentStopList();
+        return (currentStopIndex >= 0 && currentStopIndex < stops.length) ? stops[currentStopIndex] : "конечная";
+    }
+
+    function updateDisplay() {
+        if (!isPowerOn) {
+            routeNumberSpan.innerText = "---";
+            directionSpan.innerText = "ВЫКЛ";
+            currentStopSpan.innerText = "ОСТАНОВКА";
+            return;
+        }
+        routeNumberSpan.innerText = currentRouteId;
+        let dirName = routesData[currentRouteId].name;
+        if (!currentDirectionForward) {
+            const rev = [...routesData[currentRouteId].stops].reverse();
+            dirName = rev[0] + " → " + rev[rev.length-1];
+        }
+        directionSpan.innerText = currentDirectionForward ? dirName : `(обр.) ${dirName}`;
+        currentStopSpan.innerText = getCurrentStopName();
+    }
+
+    function stopSpeech() { if (window.speechSynthesis) window.speechSynthesis.cancel(); }
+
+    function announceStopWithName() {
+        if (!isPowerOn) return;
+        stopSpeech();
+        const msg = `Остановка: ${getCurrentStopName()}.`;
+        const utter = new SpeechSynthesisUtterance(msg);
+        utter.lang = "ru-RU"; utter.rate = 0.9;
+        window.speechSynthesis.speak(utter);
+    }
+
+    function announceNextStop() {
+        if (!isPowerOn) return;
+        stopSpeech();
+        const msg = `Следующая остановка: ${getCurrentStopName()}.`;
+        const utter = new SpeechSynthesisUtterance(msg);
+        utter.lang = "ru-RU"; utter.rate = 0.9;
+        window.speechSynthesis.speak(utter);
+    }
+
+    function nextStop() {
+        if (!isPowerOn) return;
+        const stops = getCurrentStopList();
+        if (currentStopIndex + 1 < stops.length) { currentStopIndex++; updateDisplay(); }
+    }
+    function prevStop() {
+        if (!isPowerOn) return;
+        if (currentStopIndex - 1 >= 0) { currentStopIndex--; updateDisplay(); }
+    }
+    function cycleRoute() {
+        if (!isPowerOn) return;
+        const ids = Object.keys(routesData).map(Number);
+        let idx = ids.indexOf(currentRouteId);
+        currentRouteId = ids[(idx + 1) % ids.length];
+        currentStopIndex = 0;
+        updateDisplay();
+    }
+    function toggleDirection() {
+        if (!isPowerOn) return;
+        currentDirectionForward = !currentDirectionForward;
+        currentStopIndex = 0;
+        updateDisplay();
+    }
+    function powerOn() { isPowerOn = true; currentStopIndex = 0; currentDirectionForward = true; updateDisplay(); }
+    function powerOff() { isPowerOn = false; stopSpeech(); updateDisplay(); }
+
+    setInterval(updateDateTime, 500);
+    btnOn.addEventListener("click", powerOn);
+    btnOff.addEventListener("click", powerOff);
+    btnRoute.addEventListener("click", cycleRoute);
+    btnDir.addEventListener("click", toggleDirection);
+    btnStopAnnounce.addEventListener("click", stopSpeech);
+    btnAnnounceStopName.addEventListener("click", announceStopWithName);
+    btnAnnounceNext.addEventListener("click", announceNextStop);
+    btnPrev.addEventListener("click", prevStop);
+    btnNext.addEventListener("click", nextStop);
+
+    updateDateTime();
+    powerOff();
+</script>
+</body>
+</html>
